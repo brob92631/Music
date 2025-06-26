@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const { signIn, signUp, signInWithGoogle } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -20,6 +22,16 @@ export default function LoginPage() {
       } else {
         await signIn(email, password);
       }
+      router.push('/dashboard'); // Redirect after successful login/signup
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Note: OAuth flow might redirect externally, so no push here needed
     } catch (e: any) {
       setError(e.message);
     }
@@ -56,7 +68,7 @@ export default function LoginPage() {
       </form>
 
       <button
-        onClick={() => signInWithGoogle()}
+        onClick={handleGoogleSignIn}
         className="mt-6 p-3 bg-red-600 text-white rounded hover:bg-red-700 max-w-sm w-full"
       >
         Continue with Google
