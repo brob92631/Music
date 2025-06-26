@@ -1,48 +1,49 @@
-import { redirect } from 'next/navigation'
-import { getUser } from '@/lib/auth-helpers'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import Section from '@/components/ui/section'
+'use client';
 
-export default async function DashboardPage() {
-  const user = await getUser()
-  if (!user) redirect('/')
+import { useAuth } from '../../context/AuthContext';
+import AudioPlayerUI from '../../components/AudioPlayerUI';
+
+export default function DashboardPage() {
+  const { user } = useAuth();
 
   return (
-    <div className="p-6 space-y-8">
-      <div className="flex items-center gap-4">
-        <Avatar>
-          <AvatarImage src={user.user_metadata.avatar_url} />
-          <AvatarFallback>{user.email[0]}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-2xl font-semibold">Welcome back, {user.user_metadata.full_name?.split(' ')[0] || user.email} 👋</h2>
-          <p className="text-muted-foreground">Your vibes await.</p>
-        </div>
+    <main className="flex flex-col min-h-screen bg-black text-white">
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-4">Welcome back, {user?.email}</h1>
+
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[
+            { title: 'Daily Mix 1', artist: 'Various Artists' },
+            { title: 'Chill Vibes', artist: 'Lo-Fi Collective' },
+            { title: 'Throwback Hits', artist: '2000s Legends' },
+            { title: 'Top 50 Global', artist: 'Chart Toppers' },
+          ].map((item, i) => (
+            <div key={i} className="bg-zinc-800 p-4 rounded-lg hover:bg-zinc-700 transition">
+              <div className="text-lg font-semibold">{item.title}</div>
+              <div className="text-sm text-zinc-400">{item.artist}</div>
+              <button
+                onClick={() =>
+                  // Replace this with real track URLs later
+                  window.dispatchEvent(
+                    new CustomEvent('play-track', {
+                      detail: {
+                        title: item.title,
+                        artist: item.artist,
+                        url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                      },
+                    })
+                  )
+                }
+                className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm"
+              >
+                Play
+              </button>
+            </div>
+          ))}
+        </section>
       </div>
 
-      <Section title="🎯 For You">
-        <PlaceholderCard title="Lo-fi Chill" />
-        <PlaceholderCard title="Rap Vibes" />
-        <PlaceholderCard title="Indie Boost" />
-      </Section>
-
-      <Section title="🔁 Daily Mix">
-        <PlaceholderCard title="Mix #1" />
-        <PlaceholderCard title="Mix #2" />
-        <PlaceholderCard title="Mix #3" />
-      </Section>
-
-      <Section title="📻 Radio Mode">
-        <PlaceholderCard title="Now Playing: Nujabes" />
-      </Section>
-    </div>
-  )
-}
-
-function PlaceholderCard({ title }: { title: string }) {
-  return (
-    <div className="p-4 rounded-2xl bg-muted w-[200px] text-sm font-medium shadow-sm">
-      {title}
-    </div>
-  )
+      <AudioPlayerUI />
+    </main>
+  );
 }
