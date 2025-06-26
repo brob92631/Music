@@ -1,8 +1,63 @@
-/* app/globals.css */
+/* Music-main/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html, body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, sans-serif;
-  background-color: #000;
-  color: #fff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #0a0a0a; /* Slightly off-black for base */
+  color: #e0e0e0; /* Softer white for base text */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a #1f1f1f; /* thumb track */
+}
+
+@layer base {
+  input[type="range"] {
+    @apply accent-blue-500; /* Or your primary color */
+  }
+   /* Custom styling for range input thumb and track - applied via className in AudioPlayerUI */
+  input[type="range"].w-full.h-1\.5 { /* Targeting the specific slider in AudioPlayerUI */
+    background-image: linear-gradient(to right, theme('colors.blue.500'), theme('colors.blue.500'));
+    background-repeat: no-repeat;
+  }
+
+  input[type="range"].w-full.h-1\.5::-webkit-slider-thumb {
+    @apply appearance-none w-3.5 h-3.5 bg-white rounded-full shadow cursor-pointer;
+    /* margin-top: -5px; /* Adjust if needed based on track height */
+  }
+  input[type="range"].w-full.h-1\.5::-moz-range-thumb {
+    @apply appearance-none w-3.5 h-3.5 bg-white rounded-full shadow cursor-pointer border-none;
+  }
+}
+
+
+body {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar for WebKit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #18181b; /* zinc-900 */
+}
+::-webkit-scrollbar-thumb {
+  background: #52525b; /* zinc-600 */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #71717a; /* zinc-500 */
+}
+
+/* Add Inter font (optional, if you want to use it) */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
