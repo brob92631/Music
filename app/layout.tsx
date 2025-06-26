@@ -1,17 +1,12 @@
-// app/layout.tsx
-import './globals.css'
+import { ReactNode } from 'react';
+import { AuthProvider } from '../context/AuthContext';
 
-export const metadata = {
-  title: 'onlyvibes',
-  description: 'Your music app',
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white min-h-screen">
-        {children}
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
-  )
+  );
 }
