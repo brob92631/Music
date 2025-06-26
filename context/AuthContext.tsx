@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -16,16 +17,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session on mount
-    const session = supabase.auth.getSession().then(({ data }) => {
+    setIsLoading(true);
+    const { data: { session } } = supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
+      setIsLoading(false);
+      return { data };
+    }).catch(() => {
+        setIsLoading(false);
+        return { data: { session: null }};
     });
 
-    // Listen for auth changes
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsLoading(false);
     });
 
     return () => {
@@ -44,17 +52,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await supabase.auth.signInWithOAuth({ 
+        provider: 'google',
+        options: {
+            redirectTo: `${window.location.origin}/auth/callback` // Ensure this callback route is handled or Supabase dashboard redirect is set
+        }
+    });
     if (error) throw error;
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    setUser(null); // Explicitly set user to null on sign out
     if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{ user, signUp, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, signUp, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
@@ -67,4 +81,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
