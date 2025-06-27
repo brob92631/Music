@@ -2,7 +2,7 @@
 'use client';
 
 import { useAudioPlayer } from '../context/AudioPlayerContext';
-import { useEffect, useState, ChangeEvent } from 'react';
+import { useEffect, useState, ChangeEvent, MouseEvent } from 'react';
 
 // --- ICONS ---
 const PlayIcon = () => <svg height="24" width="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>;
@@ -15,18 +15,30 @@ const VolumeIcon = () => <svg height="20" width="20" viewBox="0 0 24 24" fill="c
 const MusicIcon = () => <svg height="32" width="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
 
 // --- HELPER COMPONENT: Slider ---
-const Slider = ({ value, min, max, step, onChange, style, ariaLabel }: any) => {
-    const progress = ((value - min) / (max - min)) * 100;
+interface SliderProps {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onMouseUp?: (event: MouseEvent<HTMLInputElement>) => void;
+  ariaLabel: string;
+}
+
+const Slider = ({ value, min, max, step, onChange, onMouseUp, ariaLabel }: SliderProps) => {
+    const progress = max > 0 ? (value / max) * 100 : 0;
     return (
         <input
             type="range" min={min} max={max} step={step} value={value}
             onChange={onChange}
+            onMouseUp={onMouseUp}
             className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer group/slider"
             style={{ background: `linear-gradient(to right, #1DB954 ${progress}%, #4d4d4d ${progress}%)` }}
             aria-label={ariaLabel}
         />
     );
 };
+
 
 // --- MAIN COMPONENT: AudioPlayerUI ---
 export default function AudioPlayerUI() {
@@ -45,6 +57,11 @@ export default function AudioPlayerUI() {
   }
 
   const formatTime = (s: number) => !isNaN(s) ? `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}` : '0:00';
+
+  const handleSeekMouseUp = (e: MouseEvent<HTMLInputElement>) => {
+    seekTo(Number(e.currentTarget.value));
+    setIsSeeking(false);
+  }
 
   return (
     <div className="h-[var(--player-height)] bg-[#181818] border-t border-default text-white px-4">
@@ -65,16 +82,22 @@ export default function AudioPlayerUI() {
           <div className="flex items-center gap-4">
             <button className="text-secondary hover:text-primary transition-colors"><ShuffleIcon isActive={false}/></button>
             <button onClick={prevTrack} className="text-secondary hover:text-primary transition-colors disabled:opacity-30" disabled={!prevTrack}><PrevIcon /></button>
-            <button onClick={togglePlayPause} className="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center hover:scale-105 transition-transform"><_icon ps arik-label={playing ? "Pause" : "Play"}>{playing ? <PauseIcon /> : <PlayIcon />}</_icon></button>
+            <button 
+              onClick={togglePlayPause} 
+              className="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center hover:scale-105 transition-transform"
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? <PauseIcon /> : <PlayIcon />}
+            </button>
             <button onClick={nextTrack} className="text-secondary hover:text-primary transition-colors disabled:opacity-30" disabled={!nextTrack}><NextIcon /></button>
             <button className="text-secondary hover:text-primary transition-colors"><RepeatIcon isActive={false}/></button>
           </div>
           <div className="hidden md:flex items-center gap-2 w-full max-w-xl mt-2">
             <span className="text-xs text-secondary tabular-nums">{formatTime(seekValue)}</span>
             <Slider
-              min={0} max={duration || 0} step={0.1} value={seekValue}
+              min={0} max={duration || 1} step={0.1} value={seekValue}
               onChange={(e: ChangeEvent<HTMLInputElement>) => { setIsSeeking(true); setSeekValue(Number(e.target.value)); }}
-              onMouseUp={(e: any) => { seekTo(Number(e.target.value)); setIsSeeking(false); }}
+              onMouseUp={handleSeekMouseUp}
               ariaLabel="Track progress"
             />
             <span className="text-xs text-secondary tabular-nums">{formatTime(duration)}</span>
