@@ -24,6 +24,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
     try {
@@ -33,7 +34,6 @@ export default function LoginPage() {
         setIsSignUp(false); 
       } else {
         await signIn(email, password);
-        // router.push('/'); // Handled by useEffect
       }
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.');
@@ -43,86 +43,89 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
     try {
       await signInWithGoogle();
     } catch (e: any) {
       setError(e.message || 'An error occurred with Google Sign-In.');
-      setIsSubmitting(false); // Only set false if error, otherwise OAuth redirect handles it
+      setIsSubmitting(false);
     }
   };
   
   if (isLoading || (!isLoading && user)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900 text-white p-4">
-        <div className="text-xl text-zinc-400">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-xl text-gray-400 animate-pulse">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900 text-white p-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-2 text-zinc-100">onlyvibes 🎵</h1>
-        <p className="text-zinc-400">Your personal soundscape, simplified.</p>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="mb-10 text-center">
+        <h1 className="text-5xl md:text-6xl font-extrabold mb-2 text-white">
+          onlyvibes <span className="text-blue-500">.</span>
+        </h1>
+        <p className="text-gray-400">Your personal soundscape, simplified.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-xs sm:max-w-sm bg-zinc-800/70 backdrop-blur-md p-6 sm:p-8 rounded-xl shadow-2xl">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          className="p-3 bg-zinc-700/80 border border-zinc-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-zinc-400 text-sm sm:text-base"
-          required
-          disabled={isSubmitting}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="p-3 bg-zinc-700/80 border border-zinc-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-zinc-400 text-sm sm:text-base"
-          required
-          disabled={isSubmitting}
-        />
+      <div className="w-full max-w-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-800">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="p-3 bg-gray-800/60 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500 transition-all"
+            required
+            disabled={isSubmitting}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="p-3 bg-gray-800/60 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500 transition-all"
+            required
+            disabled={isSubmitting}
+          />
+
+          <button
+            type="submit"
+            className="bg-blue-600 text-white p-3 mt-2 rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '...' : (isSignUp ? 'Create Account' : 'Sign In')}
+          </button>
+        </form>
+
+        <div className="relative flex py-5 items-center">
+            <div className="flex-grow border-t border-gray-800"></div>
+            <span className="flex-shrink mx-4 text-gray-600 text-xs">OR</span>
+            <div className="flex-grow border-t border-gray-800"></div>
+        </div>
 
         <button
-          type="submit"
-          className="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-sm sm:text-base"
+          onClick={handleGoogleSignIn}
+          className="p-3 bg-gray-800/60 hover:bg-gray-700/60 border border-gray-700 text-gray-300 rounded-lg w-full flex items-center justify-center gap-2.5 transition-colors disabled:opacity-50"
           disabled={isSubmitting}
         >
-          {isSubmitting ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}
+          <GoogleIcon />
+          Continue with Google
         </button>
-      </form>
 
-      <div className="w-full max-w-xs sm:max-w-sm mt-5">
-        <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-zinc-700"></div>
-            <span className="flex-shrink mx-4 text-zinc-500 text-xs">OR</span>
-            <div className="flex-grow border-t border-zinc-700"></div>
-        </div>
+        <button
+          onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
+          className="mt-8 w-full text-center text-blue-500 hover:text-blue-400 transition-colors text-sm disabled:opacity-50"
+          disabled={isSubmitting}
+        >
+          {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Create one"}
+        </button>
+
+        {error && <p className="mt-5 text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-lg w-full text-center text-sm">{error}</p>}
       </div>
-
-      <button
-        onClick={handleGoogleSignIn}
-        className="mt-1 p-3 bg-zinc-700/80 hover:bg-zinc-600/80 text-white rounded-md max-w-xs sm:max-w-sm w-full flex items-center justify-center gap-2.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-medium text-sm sm:text-base"
-        disabled={isSubmitting}
-      >
-        <GoogleIcon />
-        {isSubmitting ? 'Processing...' : 'Continue with Google'}
-      </button>
-
-      <button
-        onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-        className="mt-8 text-blue-400 hover:text-blue-300 transition-colors underline text-sm disabled:opacity-60"
-        disabled={isSubmitting}
-      >
-        {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Create one"}
-      </button>
-
-      {error && <p className="mt-5 text-red-400 bg-red-900/40 px-4 py-2.5 rounded-md max-w-xs sm:max-w-sm w-full text-center text-xs sm:text-sm">{error}</p>}
     </div>
   );
 }
