@@ -1,3 +1,4 @@
+// Music-main/context/AuthContext.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -21,23 +22,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     setIsLoading(true);
-    const { data: { session } } = supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setIsLoading(false);
-      return { data };
-    }).catch(() => {
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
         setIsLoading(false);
-        return { data: { session: null }};
-    });
-
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+      }
+    );
 
     return () => {
-      listener?.subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
 
@@ -52,18 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ 
-        provider: 'google',
-        options: {
-            redirectTo: `${window.location.origin}/auth/callback` // Ensure this callback route is handled or Supabase dashboard redirect is set
-        }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) throw error;
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    setUser(null); // Explicitly set user to null on sign out
     if (error) throw error;
   };
 
