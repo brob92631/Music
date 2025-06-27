@@ -1,107 +1,96 @@
+// components/AudioPlayerUI.tsx
 'use client';
 
 import { useAudioPlayer } from '../context/AudioPlayerContext';
-import { useEffect, useState, ChangeEvent, MouseEvent, TouchEvent } from 'react';
+import { useEffect, useState, ChangeEvent } from 'react';
 
-// Icons
-const PlayIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>;
-const PauseIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>;
-const PrevIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>;
-const NextIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-4.5 6-8.5 6V6z"/></svg>;
-const MusicNoteSmallIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
-const VolumeHighIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>;
-const VolumeMuteIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>;
+// --- ICONS ---
+const PlayIcon = () => <svg height="24" width="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>;
+const PauseIcon = () => <svg height="24" width="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>;
+const PrevIcon = () => <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>;
+const NextIcon = () => <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-4.5 6-8.5 6V6z"/></svg>;
+const ShuffleIcon = ({isActive}:{isActive:boolean}) => <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor" className={isActive ? 'text-green-500' : 'text-secondary'}><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>;
+const RepeatIcon = ({isActive}:{isActive:boolean}) => <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor" className={isActive ? 'text-green-500' : 'text-secondary'}><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>;
+const VolumeIcon = () => <svg height="20" width="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>;
+const MusicIcon = () => <svg height="32" width="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
 
+// --- HELPER COMPONENT: Slider ---
+const Slider = ({ value, min, max, step, onChange, style, ariaLabel }: any) => {
+    const progress = ((value - min) / (max - min)) * 100;
+    return (
+        <input
+            type="range" min={min} max={max} step={step} value={value}
+            onChange={onChange}
+            className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer group/slider"
+            style={{ background: `linear-gradient(to right, #1DB954 ${progress}%, #4d4d4d ${progress}%)` }}
+            aria-label={ariaLabel}
+        />
+    );
+};
 
+// --- MAIN COMPONENT: AudioPlayerUI ---
 export default function AudioPlayerUI() {
-  const {
-    track, playing, progress, duration, volume,
-    togglePlayPause, seekTo, nextTrack, prevTrack, setVolume
-  } = useAudioPlayer();
-
-  const [seekValue, setSeekValue] = useState(0);
+  const { track, playing, progress, duration, volume, togglePlayPause, seekTo, nextTrack, prevTrack, setVolume } = useAudioPlayer();
   const [isSeeking, setIsSeeking] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
 
-  useEffect(() => {
-    if (!isSeeking) setSeekValue(progress);
-  }, [progress, isSeeking]);
+  useEffect(() => { if (!isSeeking) setSeekValue(progress); }, [progress, isSeeking]);
 
-  if (!track) return null; // Return null to hide player completely if no track is selected
+  if (!track) {
+    return (
+        <div className="h-[var(--player-height)] bg-[#181818] border-t border-default flex items-center justify-center">
+            <p className="text-sm">Select a track to start listening</p>
+        </div>
+    );
+  }
 
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds) || seconds < 0) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
-  const handleSeekChange = (e: ChangeEvent<HTMLInputElement>) => setSeekValue(Number(e.target.value));
-  const handleSeekEnd = (e: MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>) => {
-    const targetValue = Number((e.target as HTMLInputElement).value);
-    seekTo(targetValue);
-    setIsSeeking(false);
-  };
-
-  const currentProgressPercent = duration > 0 ? (seekValue / duration) * 100 : 0;
+  const formatTime = (s: number) => !isNaN(s) ? `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}` : '0:00';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[90px] bg-black/80 backdrop-blur-lg border-t border-white/10 text-white z-50">
-      <div className="grid grid-cols-3 items-center h-full max-w-screen-2xl mx-auto px-4">
+    <div className="h-[var(--player-height)] bg-[#181818] border-t border-default text-white px-4">
+      <div className="grid grid-cols-3 items-center h-full">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-14 h-14 bg-gray-800 rounded-md flex items-center justify-center shrink-0">
-            {track.artwork && !track.artwork.includes("placeholder") ? (
-              <img src={track.artwork} alt={track.title} className="w-full h-full object-cover rounded-md"/>
-            ) : (
-              <MusicNoteSmallIcon />
-            )}
+          <div className="w-14 h-14 bg-elevated rounded flex items-center justify-center shrink-0">
+            {track.artwork ? <img src={track.artwork} alt={track.title} className="w-full h-full object-cover rounded"/> : <MusicIcon />}
           </div>
-          <div className="min-w-0 hidden md:block">
-            <div className="font-semibold text-white truncate" title={track.title}>{track.title}</div>
-            <div className="text-sm text-gray-400 truncate" title={track.artist}>{track.artist}</div>
+          <div className="min-w-0 hidden sm:block">
+            <div className="font-bold text-primary truncate">{track.title}</div>
+            <div className="text-sm text-secondary truncate">{track.artist}</div>
           </div>
         </div>
 
         {/* Player Controls */}
         <div className="flex flex-col items-center justify-center">
           <div className="flex items-center gap-4">
-            <button onClick={prevTrack} className="text-gray-400 hover:text-white transition-colors disabled:opacity-30" aria-label="Previous track" disabled={!prevTrack}>
-              <PrevIcon />
-            </button>
-            <button 
-              onClick={togglePlayPause} 
-              className="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center hover:scale-105 transition-transform active:scale-100" 
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </button>
-            <button onClick={nextTrack} className="text-gray-400 hover:text-white transition-colors disabled:opacity-30" aria-label="Next track" disabled={!nextTrack}>
-              <NextIcon />
-            </button>
+            <button className="text-secondary hover:text-primary transition-colors"><ShuffleIcon isActive={false}/></button>
+            <button onClick={prevTrack} className="text-secondary hover:text-primary transition-colors disabled:opacity-30" disabled={!prevTrack}><PrevIcon /></button>
+            <button onClick={togglePlayPause} className="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center hover:scale-105 transition-transform"><_icon ps arik-label={playing ? "Pause" : "Play"}>{playing ? <PauseIcon /> : <PlayIcon />}</_icon></button>
+            <button onClick={nextTrack} className="text-secondary hover:text-primary transition-colors disabled:opacity-30" disabled={!nextTrack}><NextIcon /></button>
+            <button className="text-secondary hover:text-primary transition-colors"><RepeatIcon isActive={false}/></button>
           </div>
-          
-          <div className="hidden sm:flex items-center gap-2 w-full max-w-xs lg:max-w-md mt-2">
-            <span className="text-xs text-gray-400 w-10 text-center tabular-nums">{formatTime(seekValue)}</span>
-            <input
-              type="range" min={0} max={duration || 0} step={0.1} value={seekValue}
-              onChange={handleSeekChange} onMouseDown={() => setIsSeeking(true)} onMouseUp={handleSeekEnd}
-              onTouchStart={() => setIsSeeking(true)} onTouchEnd={handleSeekEnd}
-              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer group audio-slider"
-              style={{ backgroundSize: `${currentProgressPercent}% 100%` }} aria-label="Track progress"
+          <div className="hidden md:flex items-center gap-2 w-full max-w-xl mt-2">
+            <span className="text-xs text-secondary tabular-nums">{formatTime(seekValue)}</span>
+            <Slider
+              min={0} max={duration || 0} step={0.1} value={seekValue}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => { setIsSeeking(true); setSeekValue(Number(e.target.value)); }}
+              onMouseUp={(e: any) => { seekTo(Number(e.target.value)); setIsSeeking(false); }}
+              ariaLabel="Track progress"
             />
-            <span className="text-xs text-gray-400 w-10 text-center tabular-nums">{formatTime(duration)}</span>
+            <span className="text-xs text-secondary tabular-nums">{formatTime(duration)}</span>
           </div>
         </div>
         
         {/* Volume Controls */}
-        <div className="hidden sm:flex items-center justify-end gap-2">
-          {volume > 0 ? <VolumeHighIcon /> : <VolumeMuteIcon />}
-          <input
-            type="range" min="0" max="1" step="0.05" value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
-            className="w-24 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer group audio-slider"
-            style={{ backgroundSize: `${volume * 100}% 100%` }} aria-label="Volume control"
-          />
+        <div className="hidden md:flex items-center justify-end gap-2">
+          <VolumeIcon />
+          <div className="w-32">
+            <Slider
+              min={0} max={1} step={0.05} value={volume}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setVolume(Number(e.target.value))}
+              ariaLabel="Volume control"
+            />
+          </div>
         </div>
       </div>
     </div>
